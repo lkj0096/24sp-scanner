@@ -14,7 +14,7 @@ $(EXEC_FILE): $(LEX_C_FILE)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
 $(LEX_C_FILE): $(LEX_SRC)
-	flex $^ -o $@
+	flex -o $@ $^
 
 .PHONY: clean
 clean:
