@@ -7,9 +7,9 @@ CC = gcc
 CFLAGS = -w -gz -std=c99
 LIBS = -lfl -lm
 
-LEX_SRC = $(wildcard ./*.l)
-LEX_C_FILE = $(LEX_SRC:.l=.yy.c)
-EXEC_FILE = $(LEX_SRC:.l=.o)
+LEX_SRC = $(wildcard ./*.lex)
+LEX_C_FILE = $(LEX_SRC:.lex=.yy.c)
+EXEC_FILE = $(LEX_SRC:.lex=.o)
 
 SAMPLE_DIR = ./sample
 SAMPLE_FILE = $(wildcard $(SAMPLE_DIR)/*.qv)
