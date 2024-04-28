@@ -6,7 +6,7 @@ int origin_stdout = 0;
 
 void redirect_stdout(char log_file_name[]) {
     fflush(stdout);
-    int log_file = open(log_file_name, O_RDWR|O_CREAT|O_APPEND, 0666);
+    int log_file = open(log_file_name, O_RDWR|O_CREAT|O_TRUNC, 0666);
     origin_stdout = dup(STDOUT_FILENO);
     if( dup2(log_file, STDOUT_FILENO) < 0 ) {
         fprintf(stdout, "redirect failed");

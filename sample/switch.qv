@@ -1,0 +1,8 @@
+switch(a){
+    case 'a':
+        n--;
+    case '\n':
+        n++;
+    case 0x9:
+        n-=;
+}

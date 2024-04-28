@@ -14,41 +14,46 @@
 %option noyywrap
 
 /* Regular expressions */
+BINDIGIT    ([01])
 OCTDIGIT    ([0-7])
 DECDIGIT    ([0-9])
 HEXDIGIT    ([0-9a-fA-F])
 DIGIT       ({DECDIGIT})
 ALPHAB      ([a-zA-Z])  
 IDENT       ((_|{ALPHAB})(_|{ALPHAB}|{DIGIT})*)
-OCTINTEGER  (0[1-7]{OCTDIGIT}*)
-DECINTEGER  ([1-9]{DECDIGIT}*)
-HEXINTEGER  (0x[1-9a-fA-F]{HEXDIGIT}*)
-INTEGER     ((-)?(0|{DIGIT}))
-REAL        ({INTEGER}"."{DIGIT}+)
+BININTEGER  (0b{BINDIGIT}+)
+OCTINTEGER  (0{OCTDIGIT}+)
+DECINTEGER  (0|([1-9]{DECDIGIT}*))
+HEXINTEGER  (0x{HEXDIGIT}+)
+REAL        ({DECINTEGER}"."{DECDIGIT}+)
 PRINTABLE   ([ -~])
 ESCAPE_SEQ  ([nt\\\'\"\?])
 
 /* Rules */
 %%
-<STRINGS><<EOF>>          { yyerror("Invalid character"); yyterminate();}
-<STRINGS>\\$              { strcat(string_buffer, yytext); line_number++; } // match a \ and newline
-<STRINGS>[\\][n]          { strcat(string_buffer, "\n"); }
-<STRINGS>[\\][t]          { strcat(string_buffer, "\t"); }
-<STRINGS>[\\][?]          { strcat(string_buffer, "\?"); }
-<STRINGS>[\\][\\]         { strcat(string_buffer, "\\"); }
-<STRINGS>[\\]["]          { strcat(string_buffer, "\""); }
-<STRINGS>[\\]{PRINTABLE}  { strcat(string_buffer, yytext); }
-<STRINGS>["]              { printf("\"%s\"\n",string_buffer); BEGIN 0; }
-<STRINGS>{PRINTABLE}      { strcat(string_buffer, yytext); }
+<STRINGS><<EOF>>        { yyerror("missing terminating char \""); yyterminate(); }
+<STRINGS>(\\\n)         { line_number++; } // match a \ and newline
+<STRINGS>(\\n)          { strcat(string_buffer, "\n"); }
+<STRINGS>(\\t)          { strcat(string_buffer, "\t"); }
+<STRINGS>(\\\?)         { strcat(string_buffer, "\?"); }
+<STRINGS>(\\\\)         { strcat(string_buffer, "\\"); }
+<STRINGS>(\\\")         { strcat(string_buffer, "\""); }
+<STRINGS>(\\\')         { strcat(string_buffer, "'"); }
+<STRINGS>(\\{PRINTABLE}) { yywarning("Invalid Escape Char, skipping"); strcat(string_buffer, &(yytext[1])); }
+<STRINGS>(\")           { printf("\"%s\"<END STR>",string_buffer); BEGIN 0; }
+<STRINGS>(\n)           { yyerror("Missing Terminating Char \""); yyterminate(); }
+<STRINGS>{PRINTABLE}    { strcat(string_buffer, yytext); }
+["]                     { string_buffer[0] = '\0'; printf("<START STR>"); BEGIN(STRINGS); }
 
-"//"                    { BEGIN COMMENT; }
 <COMMENT>[^\n]*         { ; }
-<COMMENT>\n             { BEGIN 0; }
+<COMMENT>\n             { BEGIN 0; printf("\n"); line_number++; }
+"//"                    { BEGIN COMMENT; printf("<INLINE COMMENT>");  }
 
-"/*"                    { BEGIN MULTI_COMMENT; }
-<MULTI_COMMENT>"*/"     { BEGIN 0; }
-<MULTI_COMMENT>(.|\n)   { ; }
-<MULTI_COMMENT><<EOF>>  {yyerror("Invalid character"); yyterminate();}
+<MULTI_COMMENT>"*/"     { printf("<COMMENT END>"); BEGIN 0; }
+<MULTI_COMMENT>(.)      { ; }
+<MULTI_COMMENT>(\n)     { line_number++; printf("\n"); }
+<MULTI_COMMENT><<EOF>>  { yyerror("missing */"); yyterminate(); }
+"/*"                    { BEGIN MULTI_COMMENT; printf("<MULTI LINE COMMENT>"); }
 
 "var"       { printf("<VAR>"); }
 "val"       { printf("<VAL>"); }
@@ -75,7 +80,7 @@ ESCAPE_SEQ  ([nt\\\'\"\?])
 "{"         { printf("<LEFT_BRACE>"); }
 "}"         { printf("<RIGHT_BRACE>"); }
 ","         { printf("<COMMA>"); }
-";"         { printf("<SEMICOLON>\n"); }
+";"         { printf("<SEMICOLON>"); }
 ":"         { printf("<COLON>"); }
 "+"         { printf("<PLUS>"); }
 "-"         { printf("<MINUS>"); }
@@ -88,19 +93,26 @@ ESCAPE_SEQ  ([nt\\\'\"\?])
 "<"         { printf("<LESS_THAN>"); }
 ">="        { printf("<GREATER_THAN_EQUAL>"); }
 "<="        { printf("<LESS_THAN_EQUAL>"); }
-{INTEGER}   { printf("<INTEGER_LITERAL>"); }
+{BININTEGER}   { printf("<BIN_INTEGER_LITERAL>"); }
+{OCTINTEGER}   { printf("<OCT_INTEGER_LITERAL>"); }
+{DECINTEGER}   { printf("<DEC_INTEGER_LITERAL>"); }
+{HEXINTEGER}   { printf("<HEX_INTEGER_LITERAL>"); }
 {REAL}      { printf("<REAL_LITERAL>"); }
 {IDENT}     { printf("<IDENTIFIER>"); }
-'\\{ESCAPE_SEQ}'  { printf("<ESCAPE_SEQUENCE>"); }
+'\\{ESCAPE_SEQ}'  { printf("<CHARACTER_ESCAPE_SEQUENCE>"); }
 '.'         { printf("<CHARACTER_LITERAL>"); }
-["]         { string_buffer[0] = '\0'; printf("<STRING>"); BEGIN(STRINGS); }
-\n          { /* Ignore newlines */ line_number++; }
+\n          { line_number++; printf("\n"); }
+''          { yyerror("Empty Char Constant"); yyterminate(); }
 [ \t]+      { /* Ignore whitespace */ }
 .           { yyerror("Invalid Token"); yyterminate(); }  
 %%
 
+void yywarning(const char *msg) {
+    printf("\nWARNING Line %d: %s %s\n", line_number, msg, yytext);
+}
+
 void yyerror(const char *msg) {
-    printf("Line %d: %s %s\n", line_number, msg, yytext);
+    printf("\nERROR Line %d: %s %s\n", line_number, msg, yytext);
 }
 
 int main(int argc, char* argv[]) {

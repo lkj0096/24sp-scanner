@@ -1,0 +1,9 @@
+while(true){
+    fun(a);
+}
+
+do{
+    yy(b);
+}while(false);
+
+while(0){ int a = 0; }

@@ -1,0 +1,13 @@
+if(a==b){
+    printf("asdfhkjlsadhf");
+}else if(a>=b){
+    printf("");
+}else if(a<=b){
+    printf(a);
+}else if{a > b}{
+    printf("%s", a);
+}else if(a < b){
+    printf("%abb", c);
+}else{
+    printf("%d", i);
+}

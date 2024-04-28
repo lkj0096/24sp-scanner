@@ -1,0 +1,14 @@
+var i : bool = 0b100;
+val i:bool = 010;
+var i : char = 100;
+val i:char = 0xf0;
+var i : int = 100.00675460;
+val i:int = 00000000;
+var i : real = 001;
+val i:real = 0;
+class i {
+    var i:int;
+    val j : char = 'a';
+}
+// not accept
+''
