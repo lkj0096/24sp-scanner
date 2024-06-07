@@ -39,7 +39,8 @@ ESCAPE_SEQ  ([nt\\\'\"\?])
 <STRINGS>(\\\\)         { strcat(string_buffer, "\\"); }
 <STRINGS>(\\\")         { strcat(string_buffer, "\""); }
 <STRINGS>(\\\')         { strcat(string_buffer, "'"); }
-<STRINGS>(\\{PRINTABLE}) { yywarning("Invalid Escape Char, skipping"); strcat(string_buffer, &(yytext[1])); }
+<STRINGS>(\\{PRINTABLE}) { yywarning("Invalid Escape Char, skipping"); 
+                            strcat(string_buffer, &(yytext[1])); }
 <STRINGS>(\")           { printf("\"%s\"<END STR>",string_buffer); BEGIN 0; }
 <STRINGS>(\n)           { yyerror("Missing Terminating Char \""); yyterminate(); }
 <STRINGS>{PRINTABLE}    { strcat(string_buffer, yytext); }
@@ -49,10 +50,10 @@ ESCAPE_SEQ  ([nt\\\'\"\?])
 <COMMENT>\n             { BEGIN 0; printf("\n"); line_number++; }
 "//"                    { BEGIN COMMENT; printf("<INLINE COMMENT>");  }
 
+<MULTI_COMMENT><<EOF>>  { yyerror("missing */"); yyterminate(); }
+<MULTI_COMMENT>(\n)     { line_number++; printf("\n"); }
 <MULTI_COMMENT>"*/"     { printf("<COMMENT END>"); BEGIN 0; }
 <MULTI_COMMENT>(.)      { ; }
-<MULTI_COMMENT>(\n)     { line_number++; printf("\n"); }
-<MULTI_COMMENT><<EOF>>  { yyerror("missing */"); yyterminate(); }
 "/*"                    { BEGIN MULTI_COMMENT; printf("<MULTI LINE COMMENT>"); }
 
 "var"       { printf("<VAR>"); }
