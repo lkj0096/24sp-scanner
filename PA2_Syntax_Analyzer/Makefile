@@ -4,7 +4,7 @@
 ###
 
 CC = gcc
-CFLAGS = -g -pg
+CFLAGS = -g
 
 LEX_SRC = $(wildcard ./*.lex)
 YYAC_SRC = $(wildcard ./*.y)
@@ -17,7 +17,7 @@ EXEC_FILE = parser.o
 
 SAMPLE_DIR = ./sample
 SAMPLE_FILE = $(wildcard $(SAMPLE_DIR)/*.qv)
-SAMPLE_RESULT = $(SAMPLE_FILE:.qv=.qv.result)
+SAMPLE_RESULT = $(SAMPLE_FILE:.qv=.cpp)
 
 .PHONY: all
 all: $(EXEC_FILE)
@@ -33,8 +33,8 @@ $(YYAC_C_FILE): $(YYAC_SRC)
 
 .PHONY: test
 test: $(SAMPLE_RESULT)
-$(SAMPLE_RESULT): $(SAMPLE_DIR)/%.qv.result: $(SAMPLE_DIR)/%.qv $(EXEC_FILE)
-	./$(EXEC_FILE) $^
+$(SAMPLE_RESULT): $(SAMPLE_DIR)/%.cpp: $(SAMPLE_DIR)/%.qv $(EXEC_FILE)
+	./$(EXEC_FILE) $^ > $@ 2>&1
 
 .PHONY: clean
 clean:
