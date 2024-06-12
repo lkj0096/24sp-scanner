@@ -1,0 +1,19 @@
+fun add( i: int, j: int): int { // Add i and k, then return the result.
+  ret i + j;
+}
+
+fun main () {
+	var i: int = 10;
+	var j: real = 3.1415;
+	var k: int = i + j;
+	var l: real = i + j;
+	print(k);
+	print(l);
+	print(i + j * k);
+	print( "abc" );
+	print(i * (j + k));
+	print("\n");
+	println(123.456);
+	print(add(3, 5));
+  	print("\n");
+}
